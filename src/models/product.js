@@ -22,11 +22,11 @@ const productSchema = mongoose.Schema({
     //     ref: "Image"
     // }],
     description: { type: String, required: true },
+    stock: { type: Number, required: true },
     // categories: [{
     //     type: mongoose.Schema.Types.ObjectId,
     //     ref: "Category"
     // }],
-    created: { type: Date, default: Date.now }
 })
 
 module.exports = mongoose.model("Product", productSchema)
