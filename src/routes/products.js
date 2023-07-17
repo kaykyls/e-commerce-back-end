@@ -39,11 +39,11 @@ router.post("/add", async (req, res) => {
     }
 })
 
-router.put("/edit/:id", async (req, res) => {
+router.put("/:id/edit", async (req, res) => {
   let { title, previousPrice, currentPrice, rating, description, stock } = req.body;
-
+  let product = await Product.findById(req.params.id);
   try {
-    let product = await Product.findByIdAndUpdate(req.params.id, {
+    await product.update({
       title,
       previousPrice,
       currentPrice,
