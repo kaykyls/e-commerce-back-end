@@ -22,7 +22,7 @@ router.get("/:id", async (req, res) => {
 })
 
 router.post("/add", async (req, res) => {
-  let { title, previousPrice, currentPrice, rating, description, stock } = req.body;
+  let { title, previousPrice, currentPrice, rating, colors, sizes, description, stock, categories } = req.body;
   
   try {
     let product = await Product.create({
@@ -30,8 +30,11 @@ router.post("/add", async (req, res) => {
       previousPrice,
       currentPrice,
       rating,
+      colors,
+      sizes,
       description,
-      stock
+      stock,
+      categories
     });
       res.status(200).json(product);
     } catch (err) {
