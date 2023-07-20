@@ -6,9 +6,6 @@ const productSchema = mongoose.Schema({
     currentPrice: { type: Number, required: true },
     rating: { type: Number, required: true },
     isOnSale: { type: Boolean, default: false },
-    isFeatured: { type: Boolean, default: false },
-    isMostSold: { type: Boolean, default: false },
-    isNewArrival: { type: Boolean, default: false },
     colors: [{
         type: String,
         required: true
