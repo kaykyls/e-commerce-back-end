@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
+const Picture = require("../models/productImage");
 const Product = require("../models/product");
+const upload = require("../config/multer");
 
 router.get("/", async (req, res) => {
   try {
@@ -21,7 +23,9 @@ router.get("/:id", async (req, res) => {
   }
 })
 
-router.post("/add", async (req, res) => {
+router.post("/add", upload.single("file"), async (req, res) => {
+  console.log(req.body, req.file);
+
   let { title, previousPrice, currentPrice, rating, colors, sizes, description, stock, categories } = req.body;
   
   try {
@@ -36,7 +40,16 @@ router.post("/add", async (req, res) => {
       stock,
       categories
     });
-      res.status(200).json(product);
+
+    const name = title + Date.now();
+    const file = req.file;
+    const picture = new Picture({
+      name,
+      src: file.path,
+    });
+  
+    await picture.save();
+      res.status(200).json({ product, picture });
     } catch (err) {
       res.status(422).json(err);
     }
