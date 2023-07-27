@@ -29,17 +29,17 @@ router.post("/add", upload.single("file"), async (req, res) => {
   let { title, previousPrice, currentPrice, rating, colors, sizes, description, stock, categories } = req.body;
   
   try {
-    // let product = await Product.create({
-    //   title,
-    //   previousPrice,
-    //   currentPrice,
-    //   rating,
-    //   colors,
-    //   sizes,
-    //   description,
-    //   stock,
-    //   categories
-    // });
+    let product = await Product.create({
+      title,
+      previousPrice,
+      currentPrice,
+      rating,
+      colors,
+      sizes,
+      description,
+      stock,
+      categories
+    });
 
     // const name = title + Date.now();
     const file = req.file;
