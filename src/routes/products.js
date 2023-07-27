@@ -29,30 +29,31 @@ router.post("/add", upload.single("file"), async (req, res) => {
   let { title, previousPrice, currentPrice, rating, colors, sizes, description, stock, categories } = req.body;
   
   try {
-    let product = await Product.create({
-      title,
-      previousPrice,
-      currentPrice,
-      rating,
-      colors,
-      sizes,
-      description,
-      stock,
-      categories
+    // let product = await Product.create({
+    //   title,
+    //   previousPrice,
+    //   currentPrice,
+    //   rating,
+    //   colors,
+    //   sizes,
+    //   description,
+    //   stock,
+    //   categories
+    // });
+
+    // const name = title + Date.now();
+    const file = req.file;
+
+    let picture = await Picture.create({
+      // productId: ,
+      src: file.path
     });
 
-    const name = title + Date.now();
-    const file = req.file;
-    const picture = new Picture({
-      name,
-      src: file.path,
-    });
-  
-    await picture.save();
-      res.status(200).json({ product, picture });
-    } catch (err) {
-      res.status(422).json(err);
-    }
+    res.status(200).json({ product, picture });
+  } catch (err) {
+    console.error(err);
+    res.status(422).json(err);
+  }
 })
 
 router.put("/:id/edit", async (req, res) => {
