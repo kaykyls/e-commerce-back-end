@@ -1,4 +1,5 @@
-const { getStorage, ref, uploadBytesResumable, getDownloadURL } = require("../firebase");
+const { initializeApp } = require("firebase/app");
+const { getStorage, ref, uploadBytesResumable, getDownloadURL } = require("firebase/storage");
 
 const express = require('express');
 const router = express.Router();
@@ -6,6 +7,19 @@ const uploadMulter = require("../config/multer");
 
 const Picture = require("../models/productImage");
 const Product = require("../models/product");
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCNAyf5WkIDShSKFtQ1u-KjnolbQcT96Ho",
+  authDomain: "e-commerce-images-52905.firebaseapp.com",
+  projectId: "e-commerce-images-52905",
+  storageBucket: "e-commerce-images-52905.appspot.com",
+  messagingSenderId: "517910904608",
+  appId: "1:517910904608:web:577bf3e8d049f396fee145",
+  measurementId: "G-20WMGQ591V"
+};
+
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
 
 router.get("/", async (req, res) => {
   try {
@@ -29,24 +43,24 @@ router.post("/add", uploadMulter.single("file"), async (req, res) => {
   let { title, previousPrice, currentPrice, rating, colors, sizes, description, stock, categories } = req.body;
 
   try {
-    let product = await Product.create({
-      title,
-      previousPrice,
-      currentPrice,
-      rating,
-      colors,
-      sizes,
-      description,
-      stock,
-      categories
-    });
+    // let product = await Product.create({
+    //   title,
+    //   previousPrice,
+    //   currentPrice,
+    //   rating,
+    //   colors,
+    //   sizes,
+    //   description,
+    //   stock,
+    //   categories,
+    //   images: null
+    // });
 
-    const name = title + Date.now();
-    const storage = getStorage();
+    const name = Date.now() + "_";
     const storageRef = ref(storage, name);
-    const uploadTask = uploadBytesResumable(storageRef, req.file);
+    const uploadTask = uploadBytesResumable(storageRef, req.file.buffer);
 
-    uploadTask.on('state_changed', 
+    uploadTask.on('state_changed',
       (snapshot) => {
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         console.log('Upload is ' + progress + '% done');
@@ -58,26 +72,29 @@ router.post("/add", uploadMulter.single("file"), async (req, res) => {
             console.log('Upload is running');
             break;
         }
-      }, 
+      },
       (error) => {
-
-      }, 
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+        console.log(error);
+        res.status(422).json(error);
+      },
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           console.log('File available at', downloadURL);
-        });
+
+          let picture = await Picture.create({
+            productId: "product._id",
+            src: downloadURL
+            // color: 
+          });
+
+          res.status(200).json({ product, picture });
+        } catch (err) {
+          console.error(err);
+          res.status(422).json(err);
+        }
       }
     );
-
-    const url = await getDownloadURL(uploadTask.snapshot.ref);
-
-    let picture = await Picture.create({
-      productId: product._id,
-      src: url
-      // color: 
-    });
-
-    res.status(200).json({ product, picture });
   } catch (err) {
     console.error(err);
     res.status(422).json(err);
@@ -86,9 +103,8 @@ router.post("/add", uploadMulter.single("file"), async (req, res) => {
 
 router.put("/:id/edit", async (req, res) => {
   let { title, previousPrice, currentPrice, rating, description, stock } = req.body;
-  let product = await Product.findById(req.params.id);
   try {
-    await product.update({
+    let product = await Product.findByIdAndUpdate(req.params.id, {
       title,
       previousPrice,
       currentPrice,
@@ -96,6 +112,7 @@ router.put("/:id/edit", async (req, res) => {
       description,
       stock
     }, { new: true });
+
     res.status(200).json(product);
   } catch (err) {
     res.status(422).json(err);
