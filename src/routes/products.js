@@ -52,7 +52,7 @@ router.post("/add", uploadMulter.single("file"), async (req, res) => {
       sizes,
       description,
       stock,
-      // categories,
+      categories,
       images: null
     });
 
@@ -83,7 +83,7 @@ router.post("/add", uploadMulter.single("file"), async (req, res) => {
           console.log('File available at', downloadURL);
 
           let picture = new Picture({
-            productId: "product._id",
+            productId: product._id,
             src: downloadURL
             // color: 
           });
