@@ -43,20 +43,20 @@ router.post("/add", uploadMulter.single("file"), async (req, res) => {
   let { title, previousPrice, currentPrice, rating, colors, sizes, description, stock, categories } = req.body;
 
   try {
-    // let product = await Product.create({
-    //   title,
-    //   previousPrice,
-    //   currentPrice,
-    //   rating,
-    //   colors,
-    //   sizes,
-    //   description,
-    //   stock,
-    //   categories,
-    //   images: null
-    // });
+    let product = new Product({
+      title,
+      previousPrice,
+      currentPrice,
+      rating,
+      colors,
+      sizes,
+      description,
+      stock,
+      // categories,
+      images: null
+    });
 
-    const name = Date.now() + "_";
+    const name = Date.now() + ".png";
     const storageRef = ref(storage, name);
     const uploadTask = uploadBytesResumable(storageRef, req.file.buffer);
 
@@ -82,11 +82,16 @@ router.post("/add", uploadMulter.single("file"), async (req, res) => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           console.log('File available at', downloadURL);
 
-          let picture = await Picture.create({
+          let picture = new Picture({
             productId: "product._id",
             src: downloadURL
             // color: 
           });
+
+          product.images = picture._id;
+
+          await product.save();
+          await picture.save();
 
           res.status(200).json({ product, picture });
         } catch (err) {
