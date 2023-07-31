@@ -39,8 +39,10 @@ router.get("/:id", async (req, res) => {
   }
 })
 
-router.post("/add", uploadMulter.single("file"), async (req, res) => {
-  let { title, previousPrice, currentPrice, rating, colors, sizes, description, stock, categories } = req.body;
+router.post("/add", uploadMulter.array("files"), async (req, res) => {
+  console.log(req.files);
+
+  let { title, previousPrice, currentPrice, rating, colors, sizes, description, stock, categories, selectedColors } = req.body;
 
   try {
     let product = new Product({
@@ -53,55 +55,61 @@ router.post("/add", uploadMulter.single("file"), async (req, res) => {
       description,
       stock,
       categories,
-      images: null
+      images: [],
     });
 
-    const name = Date.now() + ".png";
-    const storageRef = ref(storage, name);
-    const uploadTask = uploadBytesResumable(storageRef, req.file.buffer);
+    const uploadPromises = req.files.map(async (file, index) => {
+      const name = Date.now() + "-" + file.originalname;
+      const storageRef = ref(storage, name);
+      const uploadTask = uploadBytesResumable(storageRef, file.buffer);
 
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log('Upload is ' + progress + '% done');
-        switch (snapshot.state) {
-          case 'paused':
-            console.log('Upload is paused');
-            break;
-          case 'running':
-            console.log('Upload is running');
-            break;
-        }
-      },
-      (error) => {
-        console.log(error);
-        res.status(422).json(error);
-      },
-      async () => {
-        try {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          console.log('File available at', downloadURL);
+      return new Promise((resolve, reject) => {
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log("Upload is " + progress + "% done");
+            switch (snapshot.state) {
+              case "paused":
+                console.log("Upload is paused");
+                break;
+              case "running":
+                console.log("Upload is running");
+                break;
+            }
+          },
+          (error) => {
+            reject(error);
+          },
+          async () => {
+            try {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              console.log("File available at", downloadURL);
 
-          let picture = new Picture({
-            productId: product._id,
-            src: downloadURL
-            // color: 
-          });
+              let picture = new Picture({
+                productId: product._id,
+                src: downloadURL,
+                color: selectedColors[index],
+              });
 
-          product.images = picture._id;
+              await picture.save();
+              product.images.push(picture._id);
 
-          await product.save();
-          await picture.save();
+              resolve();
+            } catch (err) {
+              reject(err);
+            }
+          }
+        );
+      });
+    });
 
-          res.status(200).json({ product, picture });
-        } catch (err) {
-          console.error(err);
-          res.status(422).json(err);
-        }
-      }
-    );
+    await Promise.all(uploadPromises);
+
+    await product.save();
+
+    res.status(200).json({ product });
   } catch (err) {
-    console.error(err);
     res.status(422).json(err);
   }
 });
