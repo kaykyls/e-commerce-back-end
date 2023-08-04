@@ -7,6 +7,7 @@ const uploadMulter = require("../config/multer");
 
 const Picture = require("../models/productImage");
 const Product = require("../models/product");
+const Category = require("../models/category");
 
 const firebaseConfig = {
   apiKey: "AIzaSyCNAyf5WkIDShSKFtQ1u-KjnolbQcT96Ho",
@@ -40,11 +41,22 @@ router.get("/:id", async (req, res) => {
 })
 
 router.post("/add", uploadMulter.array("files"), async (req, res) => {
-  console.log(req.files);
-
-  let { title, previousPrice, currentPrice, rating, colors, sizes, description, stock, categories, selectedColors } = req.body;
+  let { title, previousPrice, currentPrice, rating, colors, sizes, description, categories, selectedColors, quantities } = req.body;
 
   try {
+    let stock = [];
+
+    colors.forEach((color, colorIndex) => {
+      sizes.forEach((size, sizeIndex) => {
+        const quantity = parseInt(quantities[colorIndex][sizeIndex]);
+        stock.push({
+          color,
+          size,
+          quantity: isNaN(quantity) ? 0 : quantity,
+        });
+      });
+    });
+
     let product = new Product({
       title,
       previousPrice,
@@ -53,8 +65,8 @@ router.post("/add", uploadMulter.array("files"), async (req, res) => {
       colors,
       sizes,
       description,
-      stock,
       categories,
+      stock,
       images: [],
     });
 
@@ -107,6 +119,12 @@ router.post("/add", uploadMulter.array("files"), async (req, res) => {
     await Promise.all(uploadPromises);
 
     await product.save();
+
+    categories.forEach(async (categoryId) => {
+      let category = await Category.findById(categoryId);
+      category.products.push(product._id);
+      await category.save();
+    });
 
     res.status(200).json({ product });
   } catch (err) {

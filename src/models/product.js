@@ -14,6 +14,11 @@ const productSchema = mongoose.Schema({
         type: Number,
         required: true
     }],
+    stock: [{
+        color: { type: String, required: true },
+        size: { type: Number, required: true },
+        quantity: { type: Number, required: true, default: 0 }
+    }],
     prices: [{
         color: { type: String, required: true },
         price: { type: Number, required: true }
@@ -23,7 +28,6 @@ const productSchema = mongoose.Schema({
         ref: "ProductImage"
     }],
     description: { type: String, required: true },
-    stock: { type: Number, required: true },
     categories: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Category"
