@@ -41,33 +41,19 @@ router.get("/:id", async (req, res) => {
 })
 
 router.post("/add", uploadMulter.array("files"), async (req, res) => {
-  let { title, previousPrice, currentPrice, rating, colors, sizes, description, categories, selectedColors, quantities } = req.body;
+  let { title, currentPrice, colors, sizes, description, categories, stock } = req.body;
 
   try {
-    let stock = [];
-
-    colors.forEach((color, colorIndex) => {
-      sizes.forEach((size, sizeIndex) => {
-        const quantity = parseInt(quantities[colorIndex][sizeIndex]);
-        stock.push({
-          color,
-          size,
-          quantity: isNaN(quantity) ? 0 : quantity,
-        });
-      });
-    });
-
     let product = new Product({
       title,
-      previousPrice,
       currentPrice,
-      rating,
       colors,
       sizes,
       description,
       categories,
-      stock,
+      stock: JSON.parse(stock),
       images: [],
+      prices: [],
     });
 
     const uploadPromises = req.files.map(async (file, index) => {
@@ -101,7 +87,7 @@ router.post("/add", uploadMulter.array("files"), async (req, res) => {
               let picture = new Picture({
                 productId: product._id,
                 src: downloadURL,
-                color: selectedColors[index],
+                color: JSON.parse(req.body.photosColors)[index].color,
               });
 
               await picture.save();
@@ -120,7 +106,7 @@ router.post("/add", uploadMulter.array("files"), async (req, res) => {
 
     await product.save();
 
-    categories.forEach(async (categoryId) => {
+    product.categories.forEach(async (categoryId) => {
       let category = await Category.findById(categoryId);
       category.products.push(product._id);
       await category.save();
