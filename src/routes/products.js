@@ -91,14 +91,10 @@ router.post("/add", uploadMulter.array("files"), async (req, res) => {
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
               console.log("File available at", downloadURL);
 
-              let picture = new Picture({
-                productId: product._id,
+              product.images.push({
                 src: downloadURL,
-                color: JSON.parse(req.body.photosColors)[index].color,
+                color: JSON.parse(req.body.photosColors)[index].color
               });
-
-              await picture.save();
-              product.images.push(picture._id);
 
               resolve();
             } catch (err) {

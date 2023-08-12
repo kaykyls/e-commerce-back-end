@@ -24,8 +24,8 @@ const productSchema = mongoose.Schema({
     //     price: { type: Number, required: true }
     // }],
     images: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "ProductImage"
+        src: { type: String, required: true },
+        color: { type: String, required: true }
     }],
     description: { type: String, required: true },
     categories: [{
