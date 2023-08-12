@@ -41,7 +41,14 @@ router.get("/:id", async (req, res) => {
 })
 
 router.post("/add", uploadMulter.array("files"), async (req, res) => {
+  console.log(req.body)
+
   let { title, currentPrice, colors, sizes, description, categories, stock } = req.body;
+
+  sizes = sizes.split(',').map(size => parseInt(size));
+  colors = colors.split(',');
+
+  console.log(sizes)
 
   try {
     let product = new Product({
@@ -95,6 +102,8 @@ router.post("/add", uploadMulter.array("files"), async (req, res) => {
 
               resolve();
             } catch (err) {
+              console.log(err)
+
               reject(err);
             }
           }
@@ -106,14 +115,20 @@ router.post("/add", uploadMulter.array("files"), async (req, res) => {
 
     await product.save();
 
+    console.log(product)
+
     product.categories.forEach(async (categoryId) => {
       let category = await Category.findById(categoryId);
       category.products.push(product._id);
       await category.save();
+
+      console.log(category)
     });
 
     res.status(200).json({ product });
   } catch (err) {
+    console.log(err)
+
     res.status(422).json(err);
   }
 });
