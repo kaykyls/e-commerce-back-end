@@ -3,6 +3,7 @@ const cors = require('cors')
 const productsRouter = require('./src/routes/products')
 const categoryRouter = require('./src/routes/categories')
 const settingsRouter = require('./src/routes/settings')
+const adminRouter = require('./src/routes/admin')
 const app = express()
 const port = 3333
 require('./db')
@@ -31,6 +32,8 @@ app.use("/products", productsRouter)
 app.use("/categories", categoryRouter)
 
 app.use("/settings", settingsRouter)
+
+app.use("/admin", adminRouter)
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`)
