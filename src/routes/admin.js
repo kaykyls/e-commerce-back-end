@@ -103,7 +103,9 @@ router.post("/auth/login", async (req, res) => {
         const token = jwt.sign({
             userId: user._id
         },
-        secret)
+        secret,
+        { expiresIn: "1h" }
+        )
 
         res.status(200).json({ msg: "Auth complete successfully", token })
 
@@ -112,4 +114,12 @@ router.post("/auth/login", async (req, res) => {
     }
 })
 
+router.post("/auth/refresh", (req, res) => {
+    const token = req.body.token
+
+    if(!token) {
+        return res.status(401).json({ msg: "Access denied!" })
+    }
+})
+        
 module.exports = router

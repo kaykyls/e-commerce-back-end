@@ -10,7 +10,7 @@ require('./db')
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://e-commerce-admin-flame.vercel.app"
+  "https://e-commerce-admin-kaykyls.vercel.app"
 ];
 
 const corsOptions = {
