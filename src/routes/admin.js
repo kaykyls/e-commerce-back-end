@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/admin');
 
+let refreshTokens = []
+
 const checkToken = (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
@@ -100,26 +102,66 @@ router.post("/auth/login", async (req, res) => {
     try {
         const secret = process.env.SECRET
 
-        const token = jwt.sign({
-            userId: user._id
-        },
-        secret,
-        { expiresIn: "1h" }
-        )
+        const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
+        const refreshToken = jwt.sign({ userId: user._id }, secret)
 
-        res.status(200).json({ msg: "Auth complete successfully", token })
+        refreshTokens.push(refreshToken)
 
+        console.log(refreshTokens)
+
+        res.status(200).json({ token, refreshToken })
     } catch(error) {
 
     }
 })
 
 router.post("/auth/refresh", (req, res) => {
-    const token = req.body.token
+    const { token } = req.body
+    console.log(token, refreshTokens)
 
     if(!token) {
         return res.status(401).json({ msg: "Access denied!" })
     }
+
+    if(!refreshTokens.includes(token)) {
+        return res.status(403).json({ msg: "Invalid token!" })
+    }
+
+    jwt.verify(token, process.env.SECRET, (err, user) => {
+        if(err) {
+            return res.status(403).json({ msg: "Invalid token!" })
+        }
+
+        refreshTokens = refreshTokens.filter(token => token !== token)
+
+        const secret = process.env.SECRET
+        const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
+        const refreshToken = jwt.sign({ userId: user._id }, secret)
+
+        refreshTokens.push(refreshToken)
+
+        res.status(200).json({ token, refreshToken })
+    })
+})
+
+router.post("/auth/logout", (req, res) => {
+    const { token } = req.body
+
+    refreshTokens = refreshTokens.filter(token => token !== token)
+
+    res.status(200).json({ msg: "Logout successfully!" })
+})
+
+router.delete("/:id", checkToken, async (req, res) => {
+    const id = req.params.id
+
+    const admin = await Admin.findByIdAndDelete(id)
+
+    if(!admin) {
+        return res.status(422).json({ msg: "User not found." })
+    }
+
+    res.status(200).json({ msg: "User deleted successfully." })
 })
         
 module.exports = router
