@@ -10,7 +10,7 @@ const checkToken = (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
   
-    if (!token) return res.status(401).json({ msg: "Acesso negado!" });
+    if (!token) return res.status(401).json({ msg: "Access denied!" });
   
     try {
       const secret = process.env.SECRET;
@@ -19,7 +19,7 @@ const checkToken = (req, res, next) => {
   
       next();
     } catch (err) {
-      res.status(400).json({ msg: "O Token é inválido!" });
+      res.status(400).json({ msg: "Token is invalid!" });
     }
 }
 
@@ -103,13 +103,13 @@ router.post("/auth/login", async (req, res) => {
         const secret = process.env.SECRET
 
         const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
-        const refreshToken = jwt.sign({ userId: user._id }, secret)
+        const refreshToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "7d" })
 
         refreshTokens.push(refreshToken)
 
         console.log(refreshTokens)
 
-        res.status(200).json({ token, refreshToken })
+        res.status(200).json({ token, refreshToken, user: { id: user._id, name: user.name, email: user.email } })
     } catch(error) {
 
     }
@@ -136,7 +136,7 @@ router.post("/auth/refresh", (req, res) => {
 
         const secret = process.env.SECRET
         const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
-        const refreshToken = jwt.sign({ userId: user._id }, secret)
+        const refreshToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
 
         refreshTokens.push(refreshToken)
 
