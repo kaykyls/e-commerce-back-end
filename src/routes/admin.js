@@ -7,6 +7,8 @@ const Admin = require('../models/admin');
 let refreshTokens = []
 
 const checkToken = (req, res, next) => {
+    console.log(req.headers)
+
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
   
@@ -109,7 +111,7 @@ router.post("/auth/login", async (req, res) => {
 
         console.log(refreshTokens)
 
-        res.status(200).json({ token, refreshToken, user: { id: user._id, name: user.name, email: user.email } })
+        res.status(200).json({ token, refreshToken, user: { _id: user._id, name: user.name, email: user.email } })
     } catch(error) {
 
     }
@@ -136,7 +138,7 @@ router.post("/auth/refresh", (req, res) => {
 
         const secret = process.env.SECRET
         const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
-        const refreshToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
+        const refreshToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "7d" })
 
         refreshTokens.push(refreshToken)
 
@@ -144,13 +146,18 @@ router.post("/auth/refresh", (req, res) => {
     })
 })
 
-router.post("/auth/logout", (req, res) => {
-    const { token } = req.body
+router.post("/auth/logout", checkToken, (req, res) => {
+    const { token } = req.body;
 
-    refreshTokens = refreshTokens.filter(token => token !== token)
+    console.log(refreshTokens);
 
-    res.status(200).json({ msg: "Logout successfully!" })
-})
+    refreshTokens = refreshTokens.filter(t => t !== token);
+
+    console.log(refreshTokens);
+
+    res.status(200).json({ msg: "Logout successfully!" });
+});
+
 
 router.delete("/:id", checkToken, async (req, res) => {
     const id = req.params.id
