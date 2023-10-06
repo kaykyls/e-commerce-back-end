@@ -7,11 +7,9 @@ const Admin = require('../models/admin');
 let refreshTokens = []
 
 const checkToken = (req, res, next) => {
-    console.log(req.headers)
-
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
-  
+
     if (!token) return res.status(401).json({ msg: "Access denied!" });
   
     try {
@@ -95,8 +93,6 @@ router.post("/auth/login", async (req, res) => {
 
     const checkPassword = await bcrypt.compare(password, user.password)
 
-    console.log(checkPassword)
-
     if(!checkPassword) {
         return res.status(422).send({ error: "Invalid email or password" })
     }
@@ -104,12 +100,10 @@ router.post("/auth/login", async (req, res) => {
     try {
         const secret = process.env.SECRET
 
-        const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
+        const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "5s" })
         const refreshToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "7d" })
 
         refreshTokens.push(refreshToken)
-
-        console.log(refreshTokens)
 
         res.status(200).json({ token, refreshToken, user: { _id: user._id, name: user.name, email: user.email } })
     } catch(error) {
@@ -119,7 +113,6 @@ router.post("/auth/login", async (req, res) => {
 
 router.post("/auth/refresh", (req, res) => {
     const { token } = req.body
-    console.log(token, refreshTokens)
 
     if(!token) {
         return res.status(401).json({ msg: "Access denied!" })
@@ -137,7 +130,7 @@ router.post("/auth/refresh", (req, res) => {
         refreshTokens = refreshTokens.filter(token => token !== token)
 
         const secret = process.env.SECRET
-        const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
+        const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "5s" })
         const refreshToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "7d" })
 
         refreshTokens.push(refreshToken)
@@ -147,17 +140,12 @@ router.post("/auth/refresh", (req, res) => {
 })
 
 router.post("/auth/logout", checkToken, (req, res) => {
-    const { token } = req.body;
+    const { refreshToken } = req.body;
 
-    console.log(refreshTokens);
-
-    refreshTokens = refreshTokens.filter(t => t !== token);
-
-    console.log(refreshTokens);
+    refreshTokens = refreshTokens.filter(t => t !== refreshToken);
 
     res.status(200).json({ msg: "Logout successfully!" });
 });
-
 
 router.delete("/:id", checkToken, async (req, res) => {
     const id = req.params.id
