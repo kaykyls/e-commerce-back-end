@@ -148,15 +148,21 @@ router.post("/add", checkToken, uploadMulter.array("files"), async (req, res) =>
 });
 
 router.put("/:id/edit", async (req, res) => {
-  let { title, previousPrice, currentPrice, rating, description, stock } = req.body;
+  console.log(req.body)
+
+  let { title, currentPrice, colors, sizes, description, categories, stock } = req.body;
+  
   try {
     let product = await Product.findByIdAndUpdate(req.params.id, {
       title,
-      previousPrice,
       currentPrice,
-      rating,
+      colors,
+      sizes,
       description,
-      stock
+      categories,
+      stock: JSON.parse(stock),
+      images: [],
+      prices: [],
     }, { new: true });
 
     res.status(200).json(product);

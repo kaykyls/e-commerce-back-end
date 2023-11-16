@@ -100,7 +100,7 @@ router.post("/auth/login", async (req, res) => {
     try {
         const secret = process.env.SECRET
 
-        const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "5s" })
+        const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
         const refreshToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "7d" })
 
         refreshTokens.push(refreshToken)
@@ -130,7 +130,7 @@ router.post("/auth/refresh", (req, res) => {
         refreshTokens = refreshTokens.filter(token => token !== token)
 
         const secret = process.env.SECRET
-        const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "5s" })
+        const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "1h" })
         const refreshToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "7d" })
 
         refreshTokens.push(refreshToken)
